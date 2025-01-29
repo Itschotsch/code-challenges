@@ -1,7 +1,7 @@
-#define CHECK_TASK_ONE      false
-#define CHECK_TASK_TWO      false
-#define CHECK_TASK_THREE    false
-#define CHECK_TASK_FOUR     false
+#define CHECK_TASK_ONE      true
+#define CHECK_TASK_TWO      true
+#define CHECK_TASK_THREE    true
+#define CHECK_TASK_FOUR     true
 
 #include <cassert>
 #include <iostream>
@@ -25,15 +25,13 @@ auto escape(
         char escapeChar = '\\';
         auto offset = std::size_t();
         while ( index != std::string::npos ) {
-            value.append( _value.substr( offset, index + offset ));
+            value.append( _value.substr( offset, index - offset ));
             value.push_back( escapeChar );
             value.push_back( _value[ index ] );
             offset = index + 1;
             index = _value.find_first_of( escapeList, offset );
         }
-        if ( offset > _value.length()) {
-            value.append( _value.substr( offset ));
-        }
+        value.append( _value.substr( offset ));
     }
     return value;
 }
@@ -45,16 +43,10 @@ auto escape(
 class Color {
     public:
         Color(
-                int _r,
-                int _g,
-                int _b ) {
-            if ( _r > 255 ) {
-                throw std::invalid_argument( "Range invalid: [0 - 255]" );
-            } else if ( _g > 255 ) {
-                throw std::invalid_argument( "Range invalid: [0 - 255]" );
-            } else if ( _b > 255 ) {
-                throw std::invalid_argument( "Range invalid: [0 - 255]" );
-            }
+            unsigned char _r,
+            unsigned char _g,
+            unsigned char _b
+        ) {
             r = _r;
             g = _g;
             b = _b;
@@ -62,16 +54,8 @@ class Color {
 
         ~Color() = default;
 
-        auto operator==(
-            const Color& rhs ) -> bool {
-            if ( this->r != rhs.r ) {
-                return false;
-            } else if ( this->g != rhs.g ) {
-                return false;
-            } else if ( this->b != rhs.b ) {
-                return false;
-            }
-            return true;
+        auto operator==( const Color& rhs ) -> bool {
+            return this->r == rhs.r && this->g == rhs.g && this->b == rhs.b;
         };
 
         int r;
@@ -92,6 +76,10 @@ auto is_black(
 /*
  * Your function.
  */
+template <typename N, typename = std::enable_if_t<std::is_arithmetic_v<N>>>
+N max(N a, N b) {
+    return a > b ? a : b;
+}
 
 /**
  * -- TASK 4 --
@@ -102,7 +90,19 @@ class SecretGenerator {
         /*
          * Replace this constructor.
          */
-        SecretGenerator() = default;
+        SecretGenerator() {
+            this->randomCharacter = []() -> char {
+                // According to https://simple.wikipedia.org/wiki/File:ASCII-Table-wide.svg, a-z is 97-122 and 0-9 is 48-57.
+                // That's 26 + 10 = 36.
+                char r = rand() % 36;
+                // Now split it up:
+                if ( r < 26 ) {
+                    return 'a' + r;
+                } else {
+                    return '0' + r - 26;
+                }
+            };
+        }
 
         [[nodiscard]] auto generate(
                 size_t _length ) const -> std::string {
@@ -125,6 +125,8 @@ auto main() -> int {
     assert( escape("no_escaping")      == "no_escaping" );
     assert( escape("some escaping")    == "some\\ escaping" );
     assert( escape("'wrong escaping'") == "\\'wrong\\ escaping\\'" );
+
+    std::cout << "Test CHECK_TASK_ONE passed." << std::endl;
 #endif
 
     // Assertion tests for task 2
@@ -136,6 +138,8 @@ auto main() -> int {
     assert(  is_black( black ));
     assert( !is_black( red ));
     assert( !is_black( blue ));
+
+    std::cout << "Test CHECK_TASK_TWO passed." << std::endl;
 #endif
 
     // Assertion tests for task 3
@@ -150,6 +154,8 @@ auto main() -> int {
     assert( max( uInt64X, uInt64Y ) == uInt64Y );
     assert( max( intX,    intY )    == intX );
     assert( max( floatX,  floatY )  == floatX );
+
+    std::cout << "Test CHECK_TASK_THREE passed." << std::endl;
 #endif
 
     // Assertion tests for task 4
@@ -161,6 +167,8 @@ auto main() -> int {
     assert(  secret1.size() == 10 );
     assert( !secret1.empty() );
     assert(  secret1 != secret2 );
+
+    std::cout << "Test CHECK_TASK_FOUR passed." << std::endl;
 #endif
 
     return 0;
